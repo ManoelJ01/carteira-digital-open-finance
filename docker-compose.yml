@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.3
+    container_name: carteira-digital-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-carteira_digital}
+      MYSQL_USER: ${MYSQL_USER:-carteira_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-carteira_pass}
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: carteira-digital-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-carteira_digital}?useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-carteira_user}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-carteira_pass}
+      JWT_SECRET: ${JWT_SECRET:-change-this-super-secret-key-with-at-least-256-bits}
+      PLUGGY_CLIENT_ID: ${PLUGGY_CLIENT_ID:-}
+      PLUGGY_CLIENT_SECRET: ${PLUGGY_CLIENT_SECRET:-}
+      PLUGGY_BASE_URL: ${PLUGGY_BASE_URL:-https://api.pluggy.ai}
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql_data:

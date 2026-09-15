@@ -1,0 +1,12 @@
+# Senhas e Variáveis de Ambiente
+.env
+application-dev.yml
+application-dev.properties
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Compilados do Spring Boot (Maven/Gradle)
+target/
+build/
