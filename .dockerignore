@@ -1,0 +1,10 @@
+.git
+.env
+.env.*
+frontend
+target
+.idea
+*.pem
+*.key
+*.p12
+*.pfx

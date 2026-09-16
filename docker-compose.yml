@@ -6,16 +6,16 @@ services:
     container_name: carteira-digital-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Defina MYSQL_ROOT_PASSWORD no .env}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-carteira_digital}
       MYSQL_USER: ${MYSQL_USER:-carteira_user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-carteira_pass}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Defina MYSQL_PASSWORD no .env}
     ports:
       - "3308:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:?Defina MYSQL_ROOT_PASSWORD no .env}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -32,8 +32,8 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-carteira_digital}?useSSL=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-carteira_user}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-carteira_pass}
-      JWT_SECRET: ${JWT_SECRET:-change-this-super-secret-key-with-at-least-256-bits}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:?Defina MYSQL_PASSWORD no .env}
+      JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET no .env}
       PLUGGY_CLIENT_ID: ${PLUGGY_CLIENT_ID:-}
       PLUGGY_CLIENT_SECRET: ${PLUGGY_CLIENT_SECRET:-}
       PLUGGY_BASE_URL: ${PLUGGY_BASE_URL:-https://api.pluggy.ai}

@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Teste de integração ponta a ponta do fluxo de registro + login, subindo um MySQL real
  * via Testcontainers e aplicando as migrations do Flyway (mesmo comportamento de produção).
  */
-@SpringBootTest
+@SpringBootTest(properties = "app.jwt.secret=auth-integration-test-key-at-least-32-characters")
 @AutoConfigureMockMvc
 @Testcontainers
 class AuthControllerIT {

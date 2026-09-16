@@ -1,203 +1,125 @@
-# 💳 Carteira Digital — Agregador Multibanco (Open Finance)
+# Nexo — Carteira Digital com Open Finance
 
-API RESTful em **Java 21 + Spring Boot 3** que funciona como um **Agregador Multibanco e Carteira Unificada de Open Finance**, integrando com a **API da Pluggy** (ambiente Sandbox) para conectar múltiplas contas bancárias de um mesmo usuário, consolidando saldos, extratos e categorização financeira em um único dashboard.
+Aplicação full stack para reunir contas de diferentes bancos em uma carteira digital. O Nexo apresenta saldo consolidado, contas conectadas, extrato unificado e gastos por categoria em uma interface responsiva. Os dados bancários são importados pela integração com a Pluggy e armazenados pelo backend.
 
----
+## Funcionalidades
 
-## 🧱 Stack
+- Cadastro de usuários pela API e login com autenticação JWT.
+- Dashboard com saldo consolidado, entradas, saídas e últimas movimentações.
+- Seção **Minhas contas** com saldos por banco e botão **Adicionar Banco**.
+- Autorização pelo Pluggy Connect, registro da conexão e sincronização de contas e transações.
+- Extrato com busca e filtros por período, banco e tipo de movimentação.
+- Exportação do extrato filtrado em CSV e opção de ocultar valores.
+- Categorização de transações e sincronização periódica no backend.
+- Interface adaptada para desktop e celular, com tema roxo.
 
-Java 21 · Spring Boot 3 · Spring Data JPA/Hibernate · MySQL 8+ · Flyway · Spring Security + JWT · Spring Cloud OpenFeign · Lombok · Jakarta Bean Validation · MapStruct · JUnit 5 · Mockito · Testcontainers · Docker & Docker Compose · Springdoc OpenAPI/Swagger UI
+O widget inclui bancos Sandbox: nesse ambiente, os dados fornecidos pela Pluggy podem ser de teste. A conexão depende de credenciais válidas e da autorização no widget.
 
-## 📂 Arquitetura
+## Stack utilizada
 
-Arquitetura em camadas (*layered*), organizada por responsabilidade dentro de `com.manoel.carteiradigital`:
+| Camada | Tecnologias |
+| --- | --- |
+| Frontend | React 19, TypeScript, Vite 6, Tailwind CSS 4 e CSS personalizado |
+| Interface e conexão bancária | Lucide React e React Pluggy Connect |
+| Backend | Java 21, Spring Boot 3.3, Spring Web e Bean Validation |
+| Autenticação | Spring Security e JWT com JJWT |
+| Persistência | Spring Data JPA, Hibernate, MySQL e migrations Flyway |
+| Integração externa | Pluggy e Spring Cloud OpenFeign |
+| Mapeamento e produtividade | MapStruct, Lombok e Maven |
+| Documentação da API | OpenAPI e Swagger UI com Springdoc |
+| Infraestrutura local | Docker e Docker Compose |
+| Testes | JUnit, Spring Boot Test, Spring Security Test, H2, Testcontainers, Node Test Runner e Playwright |
 
+## Arquitetura
+
+O frontend consome a API REST autenticada com JWT. O backend aplica as regras de negócio, consulta a Pluggy e persiste os dados no MySQL. O dashboard lê os dados armazenados; atualizar sua visualização não dispara uma nova sincronização bancária.
+
+```text
+frontend/                   Interface React e testes de navegador
+src/main/java/com/manoel/carteiradigital/
+  controller/               Endpoints REST
+  service/                  Regras de negócio e integração bancária
+  client/                   Cliente HTTP da Pluggy
+  domain/                   Entidades e enums
+  repository/               Acesso ao banco de dados
+  security/                 Autenticação e validação de JWT
+  scheduler/                Sincronização agendada
+src/main/resources/
+  db/migration/             Migrations do banco
+src/test/                   Testes do backend
+docker-compose.yml          Serviços MySQL e backend
 ```
-domain/model         → Entidades JPA (Usuario, ConexaoBancaria, ContaBancaria, TransacaoConsolidada)
-domain/enums         → Enums de domínio (StatusConexao, TipoConta, TipoTransacao, CategoriaTransacao)
-repository           → Spring Data JPA repositories
-dto/request|response → Contratos de entrada e saída da API
-mapper               → MapStruct (entidade ⇄ DTO)
-service              → Regras de negócio (Usuario, Auth, OpenFinance, PluggySync, Dashboard, Categorização)
-client + client/dto  → Integração Feign com a API da Pluggy
-controller           → Endpoints REST
-security             → JWT (filtro, serviço de token, UserDetailsService)
-config               → Security, Feign, OpenAPI, Scheduling
-exception            → Tratamento global de exceções (RFC 7807 / Problem Details)
-scheduler            → Rotina @Scheduled de sincronização em segundo plano
+
+## Como executar localmente
+
+Tenha Docker com Compose, Node.js e npm instalados. Para executar o backend fora do Docker, também são necessários JDK 21 e Maven.
+
+### 1. Configure o ambiente
+
+```bash
+git clone https://github.com/ManoelJ01/carteira-digital-open-finance.git
+cd carteira-digital-open-finance
 ```
 
-## 🔌 Endpoints principais
+Copie `.env.example` para `.env`. Configure as senhas do banco e `JWT_SECRET` com uma chave aleatória de pelo menos 256 bits. Para conectar bancos, preencha `PLUGGY_CLIENT_ID` e `PLUGGY_CLIENT_SECRET`. Sem credenciais Pluggy, deixe esses campos vazios: cadastro e login continuam disponíveis, mas não será possível conectar bancos.
 
-| Método | Endpoint | Descrição |
-|---|---|---|
-| `POST` | `/auth/registro` | Cadastro de usuário (senha com BCrypt) |
-| `POST` | `/auth/login` | Login → retorna token JWT |
-| `POST` | `/open-finance/connect-token` | Gera token temporário para o Pluggy Connect Widget |
-| `POST` | `/open-finance/items` | Associa o `itemId` (banco autorizado) ao usuário logado |
-| `GET`  | `/open-finance/items` | Lista as conexões bancárias do usuário |
-| `POST` | `/open-finance/sync/{itemId}` | Sincroniza contas e transações de um item específico |
-| `GET`  | `/dashboard/resumo` | Saldo consolidado, extrato unificado e gastos por categoria |
+O arquivo `.env` é usado pelo Docker Compose e não é versionado. As credenciais privadas da Pluggy ficam exclusivamente no backend.
 
-Todos os endpoints (exceto `/auth/**`) exigem o header `Authorization: Bearer <token>`.
+### 2. Inicie o banco e a API
 
-Além disso, uma rotina `@Scheduled` (configurável em `SYNC_CRON`, padrão a cada 6h) sincroniza **todas** as conexões bancárias automaticamente em segundo plano.
+```bash
+docker compose up --build -d
+```
 
----
+- API: `http://localhost:8080`
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- MySQL para acesso pelo computador: `localhost:3308`
 
-## ✅ Pré-requisitos
+### 3. Inicie o frontend
 
-- **Java 21** (JDK)
-- **Maven 3.9+** (ou use a IDE)
-- **Docker** e **Docker Compose** (recomendado — sobe MySQL + app com um comando)
-- Uma conta gratuita no [Pluggy Dashboard](https://dashboard.pluggy.ai) para obter `CLIENT_ID` e `CLIENT_SECRET` do ambiente **Sandbox**
+```bash
+cd frontend
+npm ci
+npm run dev
+```
 
----
+Abra o endereço informado pelo Vite, normalmente `http://localhost:5173`. O proxy encaminha `/api` para `http://localhost:8080`. Para alterar o destino, copie `frontend/.env.example` para `frontend/.env.local` e ajuste `API_PROXY_TARGET`.
 
-## 🚀 Como rodar — Opção 1: Docker Compose (recomendado)
+### 4. Cadastre-se e conecte um banco
 
-Essa opção sobe o **MySQL** e a **aplicação** juntos, sem precisar instalar nada além de Docker.
+No Swagger, use `POST /auth/registro` com os campos `nome`, `email`, `cpf` (11 dígitos) e `senha` (mínimo de 8 caracteres). Depois, faça login no frontend e abra **Minhas contas → Adicionar Banco**. Conclua a autorização no Pluggy Connect; a aplicação registra o item, sincroniza os dados e atualiza o dashboard.
 
-1. **Clone/abra o projeto** e copie o arquivo de variáveis de ambiente:
-   ```bash
-   cp .env.example .env
-   ```
+Em caso de erro, o diálogo oferece uma nova tentativa. A retomada de uma conexão interrompida é mantida enquanto o dashboard continuar montado; recarregar a página descarta esse estado local.
 
-2. **Edite o `.env`** e preencha, no mínimo:
-   - `PLUGGY_CLIENT_ID` e `PLUGGY_CLIENT_SECRET` (gerados no [Pluggy Dashboard](https://dashboard.pluggy.ai), ambiente Sandbox)
-   - `JWT_SECRET` (troque pelo valor sugerido por uma string aleatória própria, com pelo menos 256 bits)
+## Testes e build
 
-3. **Suba os containers:**
-   ```bash
-   docker compose up --build
-   ```
-   Isso vai:
-   - Subir o MySQL 8 em `localhost:3306`
-   - Buildar a aplicação (multi-stage Docker build com Maven)
-   - Rodar as *migrations* do Flyway automaticamente na inicialização
-   - Expor a API em `http://localhost:8080`
+Frontend, dentro de `frontend/`:
 
-4. **Pronto!** A API estará disponível e o Swagger UI em:
-   ```
-   http://localhost:8080/swagger-ui.html
-   ```
+```bash
+npm test
+npm run test:ui
+npm run build
+```
 
-Para parar: `docker compose down`. Para apagar também os dados do MySQL: `docker compose down -v`.
+Os testes de interface usam Microsoft Edge no Windows. Em outros sistemas, instale o Chromium com `npx playwright install chromium`. Os testes usam respostas isoladas; não autorizam conexões bancárias reais.
 
----
-
-## 🛠️ Como rodar — Opção 2: Ambiente local (MySQL via Docker + app via Maven)
-
-Útil durante o desenvolvimento, para ter hot-reload/debug direto na IDE.
-
-1. **Suba apenas o MySQL** via Docker:
-   ```bash
-   docker compose up mysql
-   ```
-
-2. **Exporte as variáveis de ambiente** (ou configure na sua IDE — Run Configuration → Environment variables):
-   ```bash
-   export SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/carteira_digital?useSSL=false&serverTimezone=UTC
-   export SPRING_DATASOURCE_USERNAME=carteira_user
-   export SPRING_DATASOURCE_PASSWORD=carteira_pass
-   export JWT_SECRET=troque-esta-chave-por-uma-string-aleatoria-com-pelo-menos-256-bits
-   export PLUGGY_CLIENT_ID=seu-client-id-aqui
-   export PLUGGY_CLIENT_SECRET=seu-client-secret-aqui
-   ```
-
-3. **Rode a aplicação com Maven:**
-   ```bash
-   mvn spring-boot:run
-   ```
-   O Flyway aplica as *migrations* (`src/main/resources/db/migration/V1__create_tables.sql`) automaticamente ao subir.
-
-4. Acesse `http://localhost:8080/swagger-ui.html`.
-
-> 💡 Se preferir, gere o wrapper do Maven com `mvn -N wrapper:wrapper` para poder usar `./mvnw` em vez de depender do Maven instalado globalmente.
-
----
-
-## 🔑 Obtendo credenciais da Pluggy (Sandbox)
-
-1. Crie uma conta gratuita em https://dashboard.pluggy.ai
-2. No painel, gere um par `CLIENT_ID` / `CLIENT_SECRET` do ambiente **Sandbox** (não envolve bancos reais — a Pluggy disponibiliza conectores fictícios para testes, como o "Pluggy Bank").
-3. Use esses valores no `.env` (ou nas variáveis de ambiente locais).
-4. Para testar o fluxo completo de conexão bancária (Pluggy Connect Widget), você precisará de um front-end simples que:
-   - Chame `POST /open-finance/connect-token` para obter o `accessToken` de inicialização do widget;
-   - Inicialize o [Pluggy Connect Widget](https://docs.pluggy.ai/docs/connect-widget) com esse token;
-   - Após o usuário autorizar um conector de teste, capture o `itemId` retornado pelo widget;
-   - Envie esse `itemId` para `POST /open-finance/items` (autenticado com o JWT do usuário).
-
----
-
-## 🧪 Rodando os testes
-
-O projeto usa **JUnit 5 + Mockito** para testes unitários e **Testcontainers** (MySQL real em container) para testes de integração ponta a ponta.
+Backend, na raiz, com JDK 21 e Maven:
 
 ```bash
 mvn test
+mvn clean package
 ```
 
-> ⚠️ Os testes de integração (`*IT.java`, ex.: `AuthControllerIT`) sobem um container MySQL via Testcontainers — é necessário ter o **Docker rodando** localmente para executá-los.
+Os testes padrão incluem serviços e API com H2 em memória. O teste `AuthControllerIT` usa MySQL via Testcontainers, precisa de Docker e pode ser executado explicitamente:
 
-Cobertura incluída:
-- `CategorizacaoServiceTest` — regras de categorização das transações vindas da Pluggy
-- `UsuarioServiceTest` — cadastro de usuário, criptografia de senha, validações de e-mail/CPF duplicados
-- `DashboardServiceTest` — consolidação de saldo multibanco e agrupamento de gastos por categoria
-- `AuthControllerIT` — fluxo ponta a ponta de registro + login com banco MySQL real (Testcontainers)
-
----
-
-## 📖 Documentação da API (Swagger)
-
-Com a aplicação rodando, acesse:
-
-- **Swagger UI:** `http://localhost:8080/swagger-ui.html`
-- **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`
-
-Todos os endpoints protegidos usam autenticação **Bearer JWT** — clique em "Authorize" no Swagger e cole o token obtido em `/auth/login`.
-
----
-
-## 🗃️ Modelagem do banco (Flyway)
-
-A migration `V1__create_tables.sql` cria as 4 tabelas principais:
-
-- **usuarios** — dados de cadastro e credenciais (senha com hash BCrypt)
-- **conexoes_bancarias** — cada `item` da Pluggy vinculado a um usuário (um banco conectado)
-- **contas_bancarias** — contas dentro de cada conexão (corrente, poupança, cartão de crédito etc.)
-- **transacoes_consolidadas** — extrato consolidado de todas as contas, já categorizado
-
-Novas migrations devem seguir o padrão `V2__descricao.sql`, `V3__descricao.sql` etc. — nunca edite uma migration já aplicada.
-
----
-
-## ⚠️ Tratamento de erros
-
-Todas as exceções da API seguem o padrão **RFC 7807 (Problem Details)**, com corpo padronizado:
-
-```json
-{
-  "type": "https://carteira-digital.dev/erros/recurso-nao-encontrado",
-  "title": "Recurso não encontrado",
-  "status": 404,
-  "detail": "Conexão bancária não encontrada para este usuário: 42",
-  "instance": "/open-finance/sync/item-abc123",
-  "timestamp": "2026-09-14T12:00:00Z"
-}
+```bash
+mvn -Dtest=AuthControllerIT test
 ```
 
----
+## Publicação do frontend
 
-## 🔐 Segurança
+O build gera `frontend/dist`. Configure o servidor web para encaminhar `/api/` ao backend, removendo o prefixo `/api`. O proxy do Vite não faz parte dos arquivos publicados. Use HTTPS e configure segredos por variáveis de ambiente. Veja também [o README do frontend](frontend/README.md).
 
-- Senhas armazenadas com **BCrypt**
-- Autenticação **stateless** via **JWT** (`Spring Security` + `jjwt`)
-- Credenciais da Pluggy (`CLIENT_ID`/`CLIENT_SECRET`) e o segredo do JWT nunca ficam hardcoded — vêm sempre de variáveis de ambiente (`.env` / `application.yml`)
-- **Nunca** commite o arquivo `.env` (já está no `.gitignore`)
+## Autor
 
----
-
-## 👤 Autor
-
-Manoel Juvino dos Santos Neto — Estudante de Análise e Desenvolvimento de Sistemas (UNIT, Recife/PE)
+Manoel Juvino dos Santos Neto — [ManoelJ01](https://github.com/ManoelJ01).

@@ -7,6 +7,7 @@ import com.manoel.carteiradigital.dto.response.ContaResumoResponse;
 import com.manoel.carteiradigital.dto.response.DashboardResumoResponse;
 import com.manoel.carteiradigital.dto.response.GastoPorCategoriaResponse;
 import com.manoel.carteiradigital.dto.response.TransacaoResponse;
+import com.manoel.carteiradigital.dto.response.PerfilUsuarioResponse;
 import com.manoel.carteiradigital.domain.enums.CategoriaTransacao;
 import com.manoel.carteiradigital.domain.enums.TipoTransacao;
 import com.manoel.carteiradigital.mapper.ContaBancariaMapper;
@@ -55,7 +56,8 @@ public class DashboardService {
 
         List<GastoPorCategoriaResponse> gastosPorCategoria = gastosPorCategoria(transacoes);
 
-        return new DashboardResumoResponse(saldoConsolidado, contasResponse, extratoResponse, gastosPorCategoria);
+        return new DashboardResumoResponse(saldoConsolidado, contasResponse, extratoResponse, gastosPorCategoria,
+                new PerfilUsuarioResponse(usuario.getId(), usuario.getNome()));
     }
 
     private List<GastoPorCategoriaResponse> gastosPorCategoria(List<TransacaoConsolidada> transacoes) {

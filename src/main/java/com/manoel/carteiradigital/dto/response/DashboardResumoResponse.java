@@ -7,5 +7,6 @@ public record DashboardResumoResponse(
         BigDecimal saldoConsolidado,
         List<ContaResumoResponse> contas,
         List<TransacaoResponse> extratoUnificado,
-        List<GastoPorCategoriaResponse> gastosPorCategoria
+        List<GastoPorCategoriaResponse> gastosPorCategoria,
+        PerfilUsuarioResponse usuario
 ) {}

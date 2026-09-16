@@ -9,5 +9,6 @@ import org.mapstruct.Mapping;
 public interface TransacaoConsolidadaMapper {
 
     @Mapping(target = "contaOrigem", source = "contaBancaria.nome")
+    @Mapping(target = "contaId", source = "contaBancaria.id")
     TransacaoResponse toResponse(TransacaoConsolidada transacao);
 }

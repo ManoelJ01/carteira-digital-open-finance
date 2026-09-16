@@ -8,7 +8,7 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/carteira_digital?useSSL=false&serverTimezone=UTC}
     username: ${SPRING_DATASOURCE_USERNAME:carteira_user}
-    password: ${SPRING_DATASOURCE_PASSWORD:carteira_pass}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -34,7 +34,7 @@ spring:
 # ---- Configurações próprias da aplicação ----
 app:
   jwt:
-    secret: ${JWT_SECRET:change-this-super-secret-key-with-at-least-256-bits}
+    secret: ${JWT_SECRET}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24h
 
   pluggy:

@@ -43,7 +43,7 @@ class DashboardServiceTest {
 
     @Test
     void deveConsolidarSaldoDeMultiplasContasDeBancosDiferentes() {
-        Usuario usuario = Usuario.builder().id(1L).build();
+        Usuario usuario = Usuario.builder().id(1L).nome("Usuário de teste").build();
 
         ContaBancaria contaBancoA = ContaBancaria.builder().id(10L).tipo(TipoConta.BANK)
                 .saldo(new BigDecimal("1500.50")).build();
@@ -70,16 +70,18 @@ class DashboardServiceTest {
 
         when(transacaoConsolidadaMapper.toResponse(gastoAlimentacao))
                 .thenReturn(new TransacaoResponse(100L, "Restaurante", new BigDecimal("50.00"), TipoTransacao.DEBITO,
-                        CategoriaTransacao.ALIMENTACAO, LocalDate.now(), "Conta Corrente"));
+                        CategoriaTransacao.ALIMENTACAO, LocalDate.now(), "Conta Corrente", 10L));
         when(transacaoConsolidadaMapper.toResponse(gastoTransporte))
                 .thenReturn(new TransacaoResponse(101L, "Uber", new BigDecimal("30.00"), TipoTransacao.DEBITO,
-                        CategoriaTransacao.TRANSPORTE, LocalDate.now(), "Conta Corrente"));
+                        CategoriaTransacao.TRANSPORTE, LocalDate.now(), "Conta Corrente", 20L));
 
         DashboardResumoResponse resumo = dashboardService.resumo(usuario);
 
         assertThat(resumo.saldoConsolidado()).isEqualByComparingTo("1820.50");
         assertThat(resumo.contas()).hasSize(2);
         assertThat(resumo.extratoUnificado()).hasSize(2);
+        assertThat(resumo.extratoUnificado()).extracting(TransacaoResponse::contaId).containsExactly(10L, 20L);
+        assertThat(resumo.usuario().nome()).isEqualTo("Usuário de teste");
         assertThat(resumo.gastosPorCategoria())
                 .extracting("categoria")
                 .containsExactlyInAnyOrder(CategoriaTransacao.ALIMENTACAO, CategoriaTransacao.TRANSPORTE);

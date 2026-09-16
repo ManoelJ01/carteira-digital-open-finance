@@ -13,5 +13,6 @@ public record TransacaoResponse(
         TipoTransacao tipo,
         CategoriaTransacao categoria,
         LocalDate dataTransacao,
-        String contaOrigem
+        String contaOrigem,
+        Long contaId
 ) {}

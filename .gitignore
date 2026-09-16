@@ -1,5 +1,11 @@
 # Senhas e Variáveis de Ambiente
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
 application-dev.yml
 application-dev.properties
 
