@@ -30,7 +30,8 @@ class AuthControllerIT {
     static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.3")
             .withDatabaseName("carteira_digital_test")
             .withUsername("test")
-            .withPassword("test");
+            .withPassword("test")
+            .withStartupTimeoutSeconds(600);
 
     @DynamicPropertySource
     static void configurarDatasource(DynamicPropertyRegistry registry) {

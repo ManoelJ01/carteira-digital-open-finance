@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Testes e imagem Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Obter código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21 e cache Maven
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Compilar e executar testes unitários e de integração
+        run: mvn -B -ntp clean verify
+
+      - name: Validar construção da imagem Docker
+        run: docker build --tag nexo-ci:${{ github.sha }} .

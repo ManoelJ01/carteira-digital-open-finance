@@ -103,18 +103,27 @@ npm run build
 
 Os testes de interface usam Microsoft Edge no Windows. Em outros sistemas, instale o Chromium com `npx playwright install chromium`. Os testes usam respostas isoladas; não autorizam conexões bancárias reais.
 
-Backend, na raiz, com JDK 21 e Maven:
+Backend, na raiz, com JDK 21 e Maven (e Docker em execução para os testes de integração):
 
 ```bash
-mvn test
-mvn clean package
+mvn clean verify
 ```
 
-Os testes padrão incluem serviços e API com H2 em memória. O teste `AuthControllerIT` usa MySQL via Testcontainers, precisa de Docker e pode ser executado explicitamente:
+O Maven Surefire executa os testes `*Test.java` com `mvn test`. O Failsafe executa os testes `*IT.java` durante `mvn verify`. O `AuthControllerIT` inicia MySQL via Testcontainers e aplica as migrations do Flyway; não é necessário iniciar o MySQL do Compose para testar. Para validar só a imagem depois dos testes:
 
 ```bash
-mvn -Dtest=AuthControllerIT test
+docker build -t nexo-local .
 ```
+
+Para iniciar a API e o MySQL localmente, configure o `.env` conforme a seção anterior e execute `docker compose up --build -d`. O Dockerfile também executa os testes unitários durante a construção da imagem.
+
+### Integração Contínua no GitHub
+
+O workflow [CI](.github/workflows/ci.yml) é iniciado em cada push para `main` e em pull requests destinados a `main`. No runner Linux, ele configura Java 21 e cache Maven, executa `mvn clean verify` (compilação, testes unitários e integração com MySQL via Testcontainers) e, se tudo passar, executa `docker build` para validar o Dockerfile. Qualquer erro encerra o job com falha. O Docker já está disponível no runner; a CI não precisa de um serviço MySQL separado nem de credenciais da Pluggy.
+
+Para acompanhar, abra a aba **Actions** do repositório no GitHub e selecione **CI** e a execução do commit ou pull request. Os resultados dos testes aparecem nos logs da etapa Maven. A imagem construída é apenas validada; o workflow não faz push de imagem nem deploy.
+
+Não envie `.env`, `frontend/.env.local`, senhas ou tokens ao repositório. Eles estão ignorados pelo Git e pelo contexto de build Docker. O workflow não imprime nem configura credenciais reais.
 
 ## Publicação do frontend
 
