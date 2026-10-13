@@ -129,6 +129,11 @@ Não envie `.env`, `frontend/.env.local`, senhas ou tokens ao repositório. Eles
 
 O build gera `frontend/dist`. Configure o servidor web para encaminhar `/api/` ao backend, removendo o prefixo `/api`. O proxy do Vite não faz parte dos arquivos publicados. Use HTTPS e configure segredos por variáveis de ambiente. Veja também [o README do frontend](frontend/README.md).
 
+## DevOps
+
+A API utiliza Docker, GitHub Actions, Docker Hub e Render
+para automatizar os processos de integração e entrega contínua.
+
 ## Autor
 
 Manoel Juvino dos Santos Neto — [ManoelJ01](https://github.com/ManoelJ01).
